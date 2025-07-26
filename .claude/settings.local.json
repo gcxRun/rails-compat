@@ -13,7 +13,12 @@
       "Bash(uv add:*)",
       "Bash(PYTHONPATH=src pytest)",
       "Bash(PYTHONPATH=python/src pytest python/tests/)",
-      "Bash(PYTHONPATH=src python -m pytest)"
+      "Bash(PYTHONPATH=src python -m pytest)",
+      "Bash(ruby:*)",
+      "Bash(grep:*)",
+      "Bash(make:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }

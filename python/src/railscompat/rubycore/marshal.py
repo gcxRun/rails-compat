@@ -9,6 +9,11 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 
+class MarshalException(Exception):
+    """Exception raised for Marshal parsing errors."""
+    pass
+
+
 # TODO: [HIGH] Add comprehensive input validation for malformed Marshal data
 # TODO: [MEDIUM] Consider adding limits to prevent DoS attacks (max objects, max depth)
 class Marshal:
@@ -68,7 +73,7 @@ class Marshal:
         """
         # TODO: [HIGH] Add bounds checking to prevent IndexError
         if self._position >= len(self._data):
-            raise RuntimeError(f"Unexpected end of data at position {self._position}")
+            raise MarshalException(f"Unexpected end of data at position {self._position}")
             
         byte_val = self._data[self._position]
         self._position += 1
@@ -89,7 +94,7 @@ class Marshal:
         
         if ruby_type is None:
             # TODO: [HIGH] Don't expose internal exception details - create custom exception
-            raise RuntimeError(f"Not a managed type: {type_byte}")
+            raise MarshalException(f"Not a managed type: {type_byte}")
         
         if ruby_type == RubyType.NIL:
             return None
@@ -124,7 +129,7 @@ class Marshal:
         elif ruby_type == RubyType.OBJECT:
             return self._read_object()
         else:
-            raise RuntimeError(f"Not a managed type: {type_byte}")
+            raise MarshalException(f"Not a managed type: {type_byte}")
 
     def _read_object(self) -> "ObjectWrapper":
         """Read Ruby object with attributes."""
@@ -136,7 +141,7 @@ class Marshal:
         elif symbol_type == RubyType.SYMBOL_LINK:
             symbol = self._read_symbol_link()
         else:
-            raise RuntimeError(f"Expecting SYMBOL but got: {type_byte}")
+            raise MarshalException(f"Expecting SYMBOL but got: {type_byte}")
         
         wrapper = ObjectWrapper.wrap(RubyType.OBJECT, symbol)
         
@@ -162,7 +167,7 @@ class Marshal:
         elif symbol_type == RubyType.SYMBOL_LINK:
             symbol = self._read_symbol_link()
         else:
-            raise RuntimeError(f"Expecting SYMBOL but got: {type_byte}")
+            raise MarshalException(f"Expecting SYMBOL but got: {type_byte}")
         
         size = self._read_int()
         data_bytes = self._read_bytes(size)
@@ -185,7 +190,7 @@ class Marshal:
         elif symbol_type == RubyType.SYMBOL_LINK:
             symbol = self._read_symbol_link()
         else:
-            raise RuntimeError(f"Expecting SYMBOL but got: {type_byte}")
+            raise MarshalException(f"Expecting SYMBOL but got: {type_byte}")
         
         obj = self._read()
         wrapper = ObjectWrapper.wrap(RubyType.USR_MARSHAL, symbol)
@@ -194,15 +199,19 @@ class Marshal:
 
     def _read_bignum(self) -> int:
         """Read Ruby Bignum as Python int."""
-        self._read_byte()  # Sign byte (== 45 ? -1 : 1; but why ?)
+        sign_byte = self._read_byte()  # Sign byte: '+' (43) for positive, '-' (45) for negative
         length = self._read_int()
         data_bytes = self._read_bytes(length * 2)
         
         result = 0
         for i, byte_val in enumerate(data_bytes):
-            # Convert unsigned byte and shift
+            # Convert signed byte to unsigned value
             unsigned_byte = byte_val if byte_val >= 0 else byte_val + 256
             result += unsigned_byte << (i * 8)
+        
+        # Apply sign
+        if sign_byte == 45:  # '-'
+            result = -result
             
         return result
 
@@ -218,7 +227,7 @@ class Marshal:
         """Read symbol link reference."""
         link = self._read_int()
         if link >= len(self._symbols):
-            raise RuntimeError(f"Invalid symbol link: {link}")
+            raise MarshalException(f"Invalid symbol link: {link}")
         return self._symbols[link]
 
     def _read_symbol(self) -> str:
@@ -316,7 +325,7 @@ class Marshal:
             Bytes data
         """
         if self._position + count > len(self._data):
-            raise RuntimeError(f"Not enough data: need {count} bytes, have {len(self._data) - self._position}")
+            raise MarshalException(f"Not enough data: need {count} bytes, have {len(self._data) - self._position}")
         
         result = self._data[self._position:self._position + count]
         self._position += count
@@ -330,7 +339,7 @@ class Marshal:
         """
         # Check Marshal version bytes
         if not (self._read_byte() == 4 and self._read_byte() == 8):
-            raise RuntimeError("Unsupported Marshal version")
+            raise MarshalException("Unsupported Marshal version")
         
         return self._read()
 
@@ -404,3 +413,16 @@ class ObjectWrapper:
     def __str__(self) -> str:
         """String representation."""
         return self.ruby_type.name
+    
+    def __hash__(self) -> int:
+        """Make ObjectWrapper hashable for use as dict keys."""
+        # Use the string representation of the object and type for hashing
+        return hash((self.ruby_type, str(self.obj), tuple(str(c) for c in self.children)))
+    
+    def __eq__(self, other) -> bool:
+        """Equality comparison for ObjectWrapper."""
+        if not isinstance(other, ObjectWrapper):
+            return False
+        return (self.ruby_type == other.ruby_type and 
+                self.obj == other.obj and 
+                self.children == other.children)

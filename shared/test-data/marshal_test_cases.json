@@ -1,0 +1,521 @@
+{
+  "metadata": {
+    "generated_at": "2025-07-26T19:43:51+02:00",
+    "ruby_version": "3.2.1",
+    "marshal_version": "4.8",
+    "description": "Comprehensive Ruby Marshal test cases for cross-language compatibility"
+  },
+  "test_cases": {
+    "nil_value": {
+      "description": "Test case: nil_value",
+      "ruby_literal": "nil",
+      "marshal_base64": "BAgw",
+      "expected_result": null,
+      "data_size": 3
+    },
+    "true_value": {
+      "description": "Test case: true_value",
+      "ruby_literal": "true",
+      "marshal_base64": "BAhU",
+      "expected_result": true,
+      "data_size": 3
+    },
+    "false_value": {
+      "description": "Test case: false_value",
+      "ruby_literal": "false",
+      "marshal_base64": "BAhG",
+      "expected_result": false,
+      "data_size": 3
+    },
+    "zero": {
+      "description": "Test case: zero",
+      "ruby_literal": "0",
+      "marshal_base64": "BAhpAA==",
+      "expected_result": 0,
+      "data_size": 4
+    },
+    "small_positive": {
+      "description": "Test case: small_positive",
+      "ruby_literal": "1",
+      "marshal_base64": "BAhpBg==",
+      "expected_result": 1,
+      "data_size": 4
+    },
+    "small_positive_2": {
+      "description": "Test case: small_positive_2",
+      "ruby_literal": "5",
+      "marshal_base64": "BAhpCg==",
+      "expected_result": 5,
+      "data_size": 4
+    },
+    "small_positive_122": {
+      "description": "Test case: small_positive_122",
+      "ruby_literal": "122",
+      "marshal_base64": "BAhpfw==",
+      "expected_result": 122,
+      "data_size": 4
+    },
+    "small_positive_123": {
+      "description": "Test case: small_positive_123",
+      "ruby_literal": "123",
+      "marshal_base64": "BAhpAXs=",
+      "expected_result": 123,
+      "data_size": 5
+    },
+    "small_positive_255": {
+      "description": "Test case: small_positive_255",
+      "ruby_literal": "255",
+      "marshal_base64": "BAhpAf8=",
+      "expected_result": 255,
+      "data_size": 5
+    },
+    "medium_positive": {
+      "description": "Test case: medium_positive",
+      "ruby_literal": "1000",
+      "marshal_base64": "BAhpAugD",
+      "expected_result": 1000,
+      "data_size": 6
+    },
+    "large_positive": {
+      "description": "Test case: large_positive",
+      "ruby_literal": "132138561",
+      "marshal_base64": "BAhpBEFG4Ac=",
+      "expected_result": 132138561,
+      "data_size": 8
+    },
+    "very_large_positive": {
+      "description": "Test case: very_large_positive",
+      "ruby_literal": "1695905840",
+      "marshal_base64": "BAhsKwcweBVl",
+      "expected_result": 1695905840,
+      "data_size": 9
+    },
+    "small_negative": {
+      "description": "Test case: small_negative",
+      "ruby_literal": "-1",
+      "marshal_base64": "BAhp+g==",
+      "expected_result": -1,
+      "data_size": 4
+    },
+    "small_negative_2": {
+      "description": "Test case: small_negative_2",
+      "ruby_literal": "-48",
+      "marshal_base64": "BAhpyw==",
+      "expected_result": -48,
+      "data_size": 4
+    },
+    "small_negative_123": {
+      "description": "Test case: small_negative_123",
+      "ruby_literal": "-123",
+      "marshal_base64": "BAhpgA==",
+      "expected_result": -123,
+      "data_size": 4
+    },
+    "medium_negative": {
+      "description": "Test case: medium_negative",
+      "ruby_literal": "-1000",
+      "marshal_base64": "BAhp/hj8",
+      "expected_result": -1000,
+      "data_size": 6
+    },
+    "large_negative": {
+      "description": "Test case: large_negative",
+      "ruby_literal": "-345",
+      "marshal_base64": "BAhp/qf+",
+      "expected_result": -345,
+      "data_size": 6
+    },
+    "bignum_positive": {
+      "description": "Test case: bignum_positive",
+      "ruby_literal": "1267650600228229401496703205376",
+      "marshal_base64": "BAhsKwwAAAAAAAAAAAAAAAAQAA==",
+      "expected_result": 1267650600228229401496703205376,
+      "data_size": 19
+    },
+    "bignum_negative": {
+      "description": "Test case: bignum_negative",
+      "ruby_literal": "-1267650600228229401496703205376",
+      "marshal_base64": "BAhsLQwAAAAAAAAAAAAAAAAQAA==",
+      "expected_result": -1267650600228229401496703205376,
+      "data_size": 19
+    },
+    "empty_string": {
+      "description": "Test case: empty_string",
+      "ruby_literal": "\"\"",
+      "marshal_base64": "BAhJIgAGOgZFVA==",
+      "expected_result": "",
+      "data_size": 10
+    },
+    "simple_string": {
+      "description": "Test case: simple_string",
+      "ruby_literal": "\"hello\"",
+      "marshal_base64": "BAhJIgpoZWxsbwY6BkVU",
+      "expected_result": "hello",
+      "data_size": 15
+    },
+    "string_with_spaces": {
+      "description": "Test case: string_with_spaces",
+      "ruby_literal": "\"hello world\"",
+      "marshal_base64": "BAhJIhBoZWxsbyB3b3JsZAY6BkVU",
+      "expected_result": "hello world",
+      "data_size": 21
+    },
+    "long_string": {
+      "description": "Test case: long_string",
+      "ruby_literal": "\"a very basic string that is somewhat longer\"",
+      "marshal_base64": "BAhJIjBhIHZlcnkgYmFzaWMgc3RyaW5nIHRoYXQgaXMgc29tZXdoYXQgbG9uZ2VyBjoGRVQ=",
+      "expected_result": "a very basic string that is somewhat longer",
+      "data_size": 53
+    },
+    "unicode_string": {
+      "description": "Test case: unicode_string",
+      "ruby_literal": "\"héllo wørld 🌍\"",
+      "marshal_base64": "BAhJIhdow6lsbG8gd8O4cmxkIPCfjI0GOgZFVA==",
+      "expected_result": "héllo wørld 🌍",
+      "data_size": 28
+    },
+    "string_with_quotes": {
+      "description": "Test case: string_with_quotes",
+      "ruby_literal": "\"string \\\"with\\\" quotes\"",
+      "marshal_base64": "BAhJIhlzdHJpbmcgIndpdGgiIHF1b3RlcwY6BkVU",
+      "expected_result": "string \"with\" quotes",
+      "data_size": 30
+    },
+    "string_with_newlines": {
+      "description": "Test case: string_with_newlines",
+      "ruby_literal": "\"line1\\nline2\\nline3\"",
+      "marshal_base64": "BAhJIhZsaW5lMQpsaW5lMgpsaW5lMwY6BkVU",
+      "expected_result": "line1\nline2\nline3",
+      "data_size": 27
+    },
+    "simple_symbol": {
+      "description": "Test case: simple_symbol",
+      "ruby_literal": ":symbol",
+      "marshal_base64": "BAg6C3N5bWJvbA==",
+      "expected_result": "symbol",
+      "data_size": 10
+    },
+    "symbol_azerty": {
+      "description": "Test case: symbol_azerty",
+      "ruby_literal": ":azerty",
+      "marshal_base64": "BAg6C2F6ZXJ0eQ==",
+      "expected_result": "azerty",
+      "data_size": 10
+    },
+    "complex_symbol": {
+      "description": "Test case: complex_symbol",
+      "ruby_literal": ":\"complex-symbol!\"",
+      "marshal_base64": "BAg6FGNvbXBsZXgtc3ltYm9sIQ==",
+      "expected_result": "complex-symbol!",
+      "data_size": 19
+    },
+    "symbol_with_underscore": {
+      "description": "Test case: symbol_with_underscore",
+      "ruby_literal": ":snake_case",
+      "marshal_base64": "BAg6D3NuYWtlX2Nhc2U=",
+      "expected_result": "snake_case",
+      "data_size": 14
+    },
+    "symbol_with_numbers": {
+      "description": "Test case: symbol_with_numbers",
+      "ruby_literal": ":symbol123",
+      "marshal_base64": "BAg6DnN5bWJvbDEyMw==",
+      "expected_result": "symbol123",
+      "data_size": 13
+    },
+    "empty_array": {
+      "description": "Test case: empty_array",
+      "ruby_literal": "[]",
+      "marshal_base64": "BAhbAA==",
+      "expected_result": [],
+      "data_size": 4
+    },
+    "single_element_array": {
+      "description": "Test case: single_element_array",
+      "ruby_literal": "[1]",
+      "marshal_base64": "BAhbBmkG",
+      "expected_result": [
+        1
+      ],
+      "data_size": 6
+    },
+    "simple_array": {
+      "description": "Test case: simple_array",
+      "ruby_literal": "[1, 2, 3]",
+      "marshal_base64": "BAhbCGkGaQdpCA==",
+      "expected_result": [
+        1,
+        2,
+        3
+      ],
+      "data_size": 10
+    },
+    "mixed_array": {
+      "description": "Test case: mixed_array",
+      "ruby_literal": "[1, \"string\", :symbol, nil]",
+      "marshal_base64": "BAhbCWkGSSILc3RyaW5nBjoGRVQ6C3N5bWJvbDA=",
+      "expected_result": [
+        1,
+        "string",
+        "symbol",
+        null
+      ],
+      "data_size": 29
+    },
+    "nested_array": {
+      "description": "Test case: nested_array",
+      "ruby_literal": "[[1, 2], [3, 4]]",
+      "marshal_base64": "BAhbB1sHaQZpB1sHaQhpCQ==",
+      "expected_result": [
+        [
+          1,
+          2
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "data_size": 16
+    },
+    "array_with_hash": {
+      "description": "Test case: array_with_hash",
+      "ruby_literal": "[{\"key\"=>\"value\"}]",
+      "marshal_base64": "BAhbBnsGSSIIa2V5BjoGRVRJIgp2YWx1ZQY7AFQ=",
+      "expected_result": [
+        {
+          "key": "value"
+        }
+      ],
+      "data_size": 29
+    },
+    "deep_nested_array": {
+      "description": "Test case: deep_nested_array",
+      "ruby_literal": "[[[1, 2], [3, 4]], [[5, 6], [7, 8]]]",
+      "marshal_base64": "BAhbB1sHWwdpBmkHWwdpCGkJWwdbB2kKaQtbB2kMaQ0=",
+      "expected_result": [
+        [
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          [
+            5,
+            6
+          ],
+          [
+            7,
+            8
+          ]
+        ]
+      ],
+      "data_size": 32
+    },
+    "empty_hash": {
+      "description": "Test case: empty_hash",
+      "ruby_literal": "{}",
+      "marshal_base64": "BAh7AA==",
+      "expected_result": {},
+      "data_size": 4
+    },
+    "single_pair_hash": {
+      "description": "Test case: single_pair_hash",
+      "ruby_literal": "{\"key\"=>\"value\"}",
+      "marshal_base64": "BAh7BkkiCGtleQY6BkVUSSIKdmFsdWUGOwBU",
+      "expected_result": {
+        "key": "value"
+      },
+      "data_size": 27
+    },
+    "simple_hash": {
+      "description": "Test case: simple_hash",
+      "ruby_literal": "{\"a\"=>\"b\", \"c\"=>\"d\"}",
+      "marshal_base64": "BAh7B0kiBmEGOgZFVEkiBmIGOwBUSSIGYwY7AFRJIgZkBjsAVA==",
+      "expected_result": {
+        "a": "b",
+        "c": "d"
+      },
+      "data_size": 37
+    },
+    "hash_az_qs": {
+      "description": "Test case: hash_az_qs",
+      "ruby_literal": "{\"az\"=>\"qs\"}",
+      "marshal_base64": "BAh7BkkiB2F6BjoGRVRJIgdxcwY7AFQ=",
+      "expected_result": {
+        "az": "qs"
+      },
+      "data_size": 23
+    },
+    "complex_hash": {
+      "description": "Test case: complex_hash",
+      "ruby_literal": "{\"az\"=>\"qs\", \"b\"=>\"c\", \"d\"=>\"e\"}",
+      "marshal_base64": "BAh7CEkiB2F6BjoGRVRJIgdxcwY7AFRJIgZiBjsAVEkiBmMGOwBUSSIGZAY7AFRJIgZlBjsAVA==",
+      "expected_result": {
+        "az": "qs",
+        "b": "c",
+        "d": "e"
+      },
+      "data_size": 55
+    },
+    "symbol_keys_hash": {
+      "description": "Test case: symbol_keys_hash",
+      "ruby_literal": "{:key=>\"value\", :another=>\"data\"}",
+      "marshal_base64": "BAh7BzoIa2V5SSIKdmFsdWUGOgZFVDoMYW5vdGhlckkiCWRhdGEGOwZU",
+      "expected_result": {
+        "key": "value",
+        "another": "data"
+      },
+      "data_size": 42
+    },
+    "mixed_keys_hash": {
+      "description": "Test case: mixed_keys_hash",
+      "ruby_literal": "{\"string_key\"=>\"value1\", :symbol_key=>\"value2\"}",
+      "marshal_base64": "BAh7B0kiD3N0cmluZ19rZXkGOgZFVEkiC3ZhbHVlMQY7AFQ6D3N5bWJvbF9rZXlJIgt2YWx1ZTIGOwBU",
+      "expected_result": {
+        "string_key": "value1",
+        "symbol_key": "value2"
+      },
+      "data_size": 60
+    },
+    "nested_hash": {
+      "description": "Test case: nested_hash",
+      "ruby_literal": "{\"outer\"=>{\"inner\"=>\"value\"}}",
+      "marshal_base64": "BAh7BkkiCm91dGVyBjoGRVR7BkkiCmlubmVyBjsAVEkiCnZhbHVlBjsAVA==",
+      "expected_result": {
+        "outer": {
+          "inner": "value"
+        }
+      },
+      "data_size": 43
+    },
+    "hash_with_array": {
+      "description": "Test case: hash_with_array",
+      "ruby_literal": "{\"key\"=>[1, 2, 3]}",
+      "marshal_base64": "BAh7BkkiCGtleQY6BkVUWwhpBmkHaQg=",
+      "expected_result": {
+        "key": [
+          1,
+          2,
+          3
+        ]
+      },
+      "data_size": 23
+    },
+    "rails_session_simple": {
+      "description": "Test case: rails_session_simple",
+      "ruby_literal": "{\"session_id\"=>\"abc123def456\", \"user_id\"=>42}",
+      "marshal_base64": "BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiEWFiYzEyM2RlZjQ1NgY7AFRJIgx1c2VyX2lkBjsAVGkv",
+      "expected_result": {
+        "session_id": "abc123def456",
+        "user_id": 42
+      },
+      "data_size": 57
+    },
+    "rails_session_complex": {
+      "description": "Test case: rails_session_complex",
+      "ruby_literal": "{\"session_id\"=>\"abc123def456ghi789\", \"user_id\"=>42, \"username\"=>\"john_doe\", \"flash\"=>{\"notice\"=>\"Welcome back!\", \"alert\"=>nil}, \"_csrf_token\"=>\"token123456789\", \"preferences\"=>{\"theme\"=>\"dark\", \"language\"=>\"en\", \"notifications\"=>true}, \"cart_items\"=>[{\"product_id\"=>1, \"quantity\"=>2}, {\"product_id\"=>5, \"quantity\"=>1}]}",
+      "marshal_base64": "BAh7DEkiD3Nlc3Npb25faWQGOgZFVEkiF2FiYzEyM2RlZjQ1NmdoaTc4OQY7AFRJIgx1c2VyX2lkBjsAVGkvSSINdXNlcm5hbWUGOwBUSSINam9obl9kb2UGOwBUSSIKZmxhc2gGOwBUewdJIgtub3RpY2UGOwBUSSISV2VsY29tZSBiYWNrIQY7AFRJIgphbGVydAY7AFQwSSIQX2NzcmZfdG9rZW4GOwBUSSITdG9rZW4xMjM0NTY3ODkGOwBUSSIQcHJlZmVyZW5jZXMGOwBUewhJIgp0aGVtZQY7AFRJIglkYXJrBjsAVEkiDWxhbmd1YWdlBjsAVEkiB2VuBjsAVEkiEm5vdGlmaWNhdGlvbnMGOwBUVEkiD2NhcnRfaXRlbXMGOwBUWwd7B0kiD3Byb2R1Y3RfaWQGOwBUaQZJIg1xdWFudGl0eQY7AFRpB3sHQBxpCkAdaQY=",
+      "expected_result": {
+        "session_id": "abc123def456ghi789",
+        "user_id": 42,
+        "username": "john_doe",
+        "flash": {
+          "notice": "Welcome back!",
+          "alert": null
+        },
+        "_csrf_token": "token123456789",
+        "preferences": {
+          "theme": "dark",
+          "language": "en",
+          "notifications": true
+        },
+        "cart_items": [
+          {
+            "product_id": 1,
+            "quantity": 2
+          },
+          {
+            "product_id": 5,
+            "quantity": 1
+          }
+        ]
+      },
+      "data_size": 347
+    },
+    "deeply_nested": {
+      "description": "Test case: deeply_nested",
+      "ruby_literal": "{\"level1\"=>{\"level2\"=>{\"level3\"=>{\"level4\"=>[\"deep\", \"array\", \"data\"]}}}}",
+      "marshal_base64": "BAh7BkkiC2xldmVsMQY6BkVUewZJIgtsZXZlbDIGOwBUewZJIgtsZXZlbDMGOwBUewZJIgtsZXZlbDQGOwBUWwhJIglkZWVwBjsAVEkiCmFycmF5BjsAVEkiCWRhdGEGOwBU",
+      "expected_result": {
+        "level1": {
+          "level2": {
+            "level3": {
+              "level4": [
+                "deep",
+                "array",
+                "data"
+              ]
+            }
+          }
+        }
+      },
+      "data_size": 99
+    },
+    "symbol_reuse": {
+      "description": "Test case: symbol_reuse",
+      "ruby_literal": "[:same_symbol, :same_symbol, :different, :same_symbol]",
+      "marshal_base64": "BAhbCToQc2FtZV9zeW1ib2w7ADoOZGlmZmVyZW50OwA=",
+      "expected_result": [
+        "same_symbol",
+        "same_symbol",
+        "different",
+        "same_symbol"
+      ],
+      "data_size": 32
+    },
+    "mixed_complex": {
+      "description": "Test case: mixed_complex",
+      "ruby_literal": "{\"metadata\"=>{\"version\"=>1, \"created_at\"=>\"2024-01-01T00:00:00Z\"}, \"data\"=>[{\"id\"=>1, \"name\"=>\"Item 1\", \"active\"=>true}, {\"id\"=>2, \"name\"=>\"Item 2\", \"active\"=>false}, {\"id\"=>3, \"name\"=>nil, \"active\"=>true}], \"settings\"=>{:debug=>true, :timeout=>30, \"features\"=>[:feature_a, :feature_b, :feature_c]}}",
+      "marshal_base64": "BAh7CEkiDW1ldGFkYXRhBjoGRVR7B0kiDHZlcnNpb24GOwBUaQZJIg9jcmVhdGVkX2F0BjsAVEkiGTIwMjQtMDEtMDFUMDA6MDA6MDBaBjsAVEkiCWRhdGEGOwBUWwh7CEkiB2lkBjsAVGkGSSIJbmFtZQY7AFRJIgtJdGVtIDEGOwBUSSILYWN0aXZlBjsAVFR7CEAOaQdAD0kiC0l0ZW0gMgY7AFRAEUZ7CEAOaQhADzBAEVRJIg1zZXR0aW5ncwY7AFR7CDoKZGVidWdUOgx0aW1lb3V0aSNJIg1mZWF0dXJlcwY7AFRbCDoOZmVhdHVyZV9hOg5mZWF0dXJlX2I6DmZlYXR1cmVfYw==",
+      "expected_result": {
+        "metadata": {
+          "version": 1,
+          "created_at": "2024-01-01T00:00:00Z"
+        },
+        "data": [
+          {
+            "id": 1,
+            "name": "Item 1",
+            "active": true
+          },
+          {
+            "id": 2,
+            "name": "Item 2",
+            "active": false
+          },
+          {
+            "id": 3,
+            "name": null,
+            "active": true
+          }
+        ],
+        "settings": {
+          "debug": true,
+          "timeout": 30,
+          "features": [
+            "feature_a",
+            "feature_b",
+            "feature_c"
+          ]
+        }
+      },
+      "data_size": 268
+    }
+  }
+}

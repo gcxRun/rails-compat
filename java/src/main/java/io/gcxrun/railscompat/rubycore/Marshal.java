@@ -1,5 +1,6 @@
 package io.gcxrun.railscompat.rubycore;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -16,46 +17,94 @@ import java.util.Map;
  * 
  * @see <a href="https://docs.ruby-lang.org/en/3.0/Marshal.html">Ruby Marshal documentation</a>
  */
-// TODO: [HIGH] Add comprehensive input validation for malformed Marshal data
-// TODO: [MEDIUM] Consider adding limits to prevent DoS attacks (max objects, max depth)
 public class Marshal {
 
+  private static final int MAX_RECURSION_DEPTH = 1000;
+  private static final int MAX_DATA_SIZE = 100 * 1024 * 1024; // 100MB limit
+  
   private final ArrayList<Object> symbols = new ArrayList<>();
   private final ByteBuffer bb;
+  private int recursionDepth = 0;
+  
+  public static class MarshalException extends RuntimeException {
+    public MarshalException(String message) {
+      super(message);
+    }
+    
+    public MarshalException(String message, Throwable cause) {
+      super(message, cause);
+    }
+  }
 
   private Marshal(byte[] bytes) {
-    // TODO: [HIGH] Add input validation - bytes should not be null or empty
+    if (bytes == null) {
+      throw new MarshalException("Input bytes cannot be null");
+    }
+    if (bytes.length == 0) {
+      throw new MarshalException("Input bytes cannot be empty");
+    }
+    if (bytes.length > MAX_DATA_SIZE) {
+      throw new MarshalException("Input data too large: " + bytes.length + " bytes (max: " + MAX_DATA_SIZE + ")");
+    }
     this.bb = ByteBuffer.wrap(bytes);
   }
 
   public static Object load(byte[] bytes) {
-    // TODO: [HIGH] Add input validation and size limits
-    // TODO: [MEDIUM] Add exception handling for corrupted data
-    return (new Marshal(bytes)).load();
+    try {
+      return (new Marshal(bytes)).load();
+    } catch (Exception e) {
+      if (e instanceof MarshalException) {
+        throw e;
+      }
+      throw new MarshalException("Failed to parse Marshal data", e);
+    }
   }
 
   public static Object load(String b64EncodedBytes) {
-    // TODO: [HIGH] Add input validation - b64EncodedBytes should not be null
-    // TODO: [MEDIUM] Add exception handling for invalid Base64 data
-    return (new Marshal(Base64.getDecoder().decode(b64EncodedBytes))).load();
+    if (b64EncodedBytes == null) {
+      throw new MarshalException("Base64 encoded bytes cannot be null");
+    }
+    try {
+      byte[] bytes = Base64.getDecoder().decode(b64EncodedBytes);
+      return (new Marshal(bytes)).load();
+    } catch (IllegalArgumentException e) {
+      throw new MarshalException("Invalid Base64 data", e);
+    } catch (Exception e) {
+      if (e instanceof MarshalException) {
+        throw e;
+      }
+      throw new MarshalException("Failed to parse Marshal data", e);
+    }
   }
 
   private byte readByte() {
-    // TODO: [HIGH] Add bounds checking to prevent BufferUnderflowException
+    if (!this.bb.hasRemaining()) {
+      throw new MarshalException("Unexpected end of data");
+    }
     return this.bb.get();
+  }
+  
+  private void readBytes(byte[] buffer) {
+    if (this.bb.remaining() < buffer.length) {
+      throw new MarshalException("Not enough data: need " + buffer.length + " bytes, have " + this.bb.remaining());
+    }
+    this.bb.get(buffer);
   }
 
   private Object read() {
-    // TODO: [MEDIUM] Add recursion depth limit to prevent stack overflow
-
-    byte c = readByte();
-    RubyType type = RubyType.valueOf(c);
-    if (type == null) {
-      // TODO: [HIGH] Don't expose internal exception details - create custom exception
-      throw new RuntimeException("Not a managed type: " + c);
+    recursionDepth++;
+    if (recursionDepth > MAX_RECURSION_DEPTH) {
+      throw new MarshalException("Maximum recursion depth exceeded: " + MAX_RECURSION_DEPTH);
     }
+    
+    try {
+      byte c = readByte();
+      RubyType type = RubyType.valueOf(c);
+      if (type == null) {
+        throw new MarshalException("Unsupported Marshal type: 0x" + String.format("%02X", c));
+      }
 
-    return switch (type) {
+      return switch (type) {
       case NIL -> // 0
       null;
       case TRUE -> // T
@@ -81,8 +130,11 @@ public class Marshal {
       case USERDEF -> readUserDef();
       case LINK -> readLink();
       case OBJECT -> readRObject();
-      default -> throw new RuntimeException("Not a managed type: " + c);
+      default -> throw new MarshalException("Unsupported Marshal type: 0x" + String.format("%02X", c));
     };
+    } finally {
+      recursionDepth--;
+    }
   }
 
   private Object readRObject() {
@@ -93,7 +145,7 @@ public class Marshal {
         switch (type) {
           case SYMBOL -> readSymbol();
           case SYMBOL_LINK -> readSymbolLink();
-          default -> throw new RuntimeException("Expecting SYMBOL but got : " + c);
+          default -> throw new MarshalException("Expected SYMBOL but got: 0x" + String.format("%02X", c));
         };
 
     var wrapper = ObjectWrapper.wrap(RubyType.OBJECT, symbol);
@@ -119,13 +171,16 @@ public class Marshal {
         switch (type) {
           case SYMBOL -> readSymbol();
           case SYMBOL_LINK -> readSymbolLink();
-          default -> throw new RuntimeException("Expecting SYMBOL but got : " + c);
+          default -> throw new MarshalException("Expected SYMBOL but got: 0x" + String.format("%02X", c));
         };
 
     var size = readInt();
+    if (size < 0 || size > MAX_DATA_SIZE) {
+      throw new MarshalException("Invalid size for USERDEF: " + size);
+    }
 
     var tmpBytes = new byte[size.intValue()];
-    this.bb.get(tmpBytes);
+    readBytes(tmpBytes);
 
     var wrapper = ObjectWrapper.wrap(RubyType.USERDEF, symbol);
     wrapper.add(new String(tmpBytes));
@@ -143,7 +198,7 @@ public class Marshal {
         switch (type) {
           case SYMBOL -> readSymbol();
           case SYMBOL_LINK -> readSymbolLink();
-          default -> throw new RuntimeException("Expecting SYMBOL but got : " + c);
+          default -> throw new MarshalException("Expected SYMBOL but got: 0x" + String.format("%02X", c));
         };
 
     var o = read();
@@ -153,20 +208,42 @@ public class Marshal {
   }
 
   private Object readBigNum() {
-    readByte(); // == 45 ? -1 : 1; // but why ?
+    byte sign = readByte(); // Sign byte: '+' (43) for positive, '-' (45) for negative
     long l = readInt();
-    var tmpBytes = new byte[(int) l * 2];
-    this.bb.get(tmpBytes);
-
-    long result = 0;
-    for (int i = 0; i < tmpBytes.length; i++) {
-      result += (long) tmpBytes[i] << (i * 8);
+    if (l < 0 || l > MAX_DATA_SIZE / 2) {
+      throw new MarshalException("Invalid size for BIGNUM: " + l);
     }
-    return result;
+    var tmpBytes = new byte[(int) l * 2];
+    readBytes(tmpBytes);
+
+    // Build BigInteger from little-endian bytes
+    BigInteger result = BigInteger.ZERO;
+    for (int i = 0; i < tmpBytes.length; i++) {
+      // Convert signed byte to unsigned value
+      int unsignedByte = tmpBytes[i] & 0xFF;
+      BigInteger byteValue = BigInteger.valueOf(unsignedByte);
+      BigInteger shiftedValue = byteValue.shiftLeft(i * 8);
+      result = result.add(shiftedValue);
+    }
+    
+    // Apply sign
+    if (sign == 45) { // '-'
+      result = result.negate();
+    }
+    
+    // Convert to Long if it fits, otherwise keep as BigInteger
+    if (result.bitLength() < 63) { // Can fit in signed long
+      return result.longValue();
+    } else {
+      return result;
+    }
   }
 
   private Object readArray() {
     var size = readInt().intValue();
+    if (size < 0 || size > MAX_DATA_SIZE / 100) { // Reasonable limit for array size
+      throw new MarshalException("Invalid array size: " + size);
+    }
     List<Object> result = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       result.add(read());
@@ -176,17 +253,27 @@ public class Marshal {
 
   private Object readSymbolLink() {
     var link = readInt();
-
-    return symbols.get(link.intValue());
+    int index = link.intValue();
+    
+    if (index < 0 || index >= symbols.size()) {
+      throw new MarshalException("Invalid symbol link: " + index + " (available: " + symbols.size() + ")");
+    }
+    
+    return symbols.get(index);
   }
 
   private Object readSymbol() {
     var size = readInt().intValue();
+    if (size < 0 || size > MAX_DATA_SIZE / 10) { // Reasonable limit for symbol size
+      throw new MarshalException("Invalid symbol size: " + size);
+    }
     if (size == 0) {
-      return "";
+      var sym = ":";
+      symbols.add(sym);
+      return sym;
     }
     var tmpBytes = new byte[size];
-    this.bb.get(tmpBytes);
+    readBytes(tmpBytes);
     var result = new String(tmpBytes);
     var sym = ":" + result;
     symbols.add(sym);
@@ -248,6 +335,9 @@ public class Marshal {
 
   private Map<Object, Object> readHash() {
     int size = readInt().intValue();
+    if (size < 0 || size > MAX_DATA_SIZE / 100) { // Reasonable limit for hash size
+      throw new MarshalException("Invalid hash size: " + size);
+    }
     Map<Object, Object> map = new HashMap<>();
     for (int i = 0; i < size; i++) {
       Object key = read();
@@ -259,8 +349,11 @@ public class Marshal {
 
   private String readString() {
     var size = readInt().intValue();
+    if (size < 0 || size > MAX_DATA_SIZE) {
+      throw new MarshalException("Invalid string size: " + size);
+    }
     var tmpBytes = new byte[size];
-    this.bb.get(tmpBytes);
+    readBytes(tmpBytes);
     return new String(tmpBytes, StandardCharsets.UTF_8);
   }
 
@@ -280,7 +373,7 @@ public class Marshal {
 
   private Object load() {
     if (!(readByte() == 4 && readByte() == 8)) {
-      throw new RuntimeException("Unsupported version:");
+      throw new MarshalException("Unsupported Marshal version (expected 4.8)");
     }
     return read();
   }
