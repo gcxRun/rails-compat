@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(javac:*)",
+      "Bash(rm:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv add:*)",
+      "Bash(PYTHONPATH=src pytest)",
+      "Bash(PYTHONPATH=python/src pytest python/tests/)",
+      "Bash(PYTHONPATH=src python -m pytest)"
+    ],
+    "deny": []
+  }
+}
