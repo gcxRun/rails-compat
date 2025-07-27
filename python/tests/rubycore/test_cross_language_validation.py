@@ -89,11 +89,14 @@ class TestCrossLanguageValidation:
         
         # Compare Python result with expected result
         expected = test_case['expected_result']
+        ruby_literal = test_case['ruby_literal']
         
         # Handle symbol conversion (Ruby symbols become strings with ':' prefix)
-        if isinstance(expected, str) and case_name.startswith('symbol_'):
-            # For symbols, Python should return string with ':' prefix
+        if isinstance(expected, str) and ruby_literal.startswith(':'):
+            # For symbols, Python should return string with ':' prefix, but test data has plain string
             assert python_result.startswith(':'), f"Symbol should start with ':' for {case_name}"
+            # Compare symbol name (without ':') with expected
+            assert python_result[1:] == expected, f"Symbol name doesn't match expected for {case_name}"
         else:
             # For other types, direct comparison
             assert python_result == expected, f"Python result doesn't match expected for {case_name}"
@@ -234,7 +237,9 @@ class TestCrossLanguageValidation:
         for case_name, test_case_data in test_cases.items():
             try:
                 python_result = Marshal.load_b64(test_case_data['marshal_base64'])
-                assert python_result is not None
+                # nil_value is expected to be None, others should not be None
+                if case_name != 'nil_value':
+                    assert python_result is not None, f"Expected non-None result for {case_name}"
             except Exception as e:
                 python_failures.append(f"{case_name}: {e}")
         

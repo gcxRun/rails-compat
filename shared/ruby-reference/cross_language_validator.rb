@@ -120,7 +120,14 @@ class CrossLanguageValidator
     when Integer
       actual.is_a?(Integer) && expected == actual
     when String
-      actual.is_a?(String) && expected == actual
+      if actual.is_a?(String)
+        expected == actual
+      elsif actual.is_a?(Symbol)
+        # Expected is string, actual is symbol - compare symbol name with expected
+        expected == actual.to_s
+      else
+        false
+      end
     when Symbol
       # Symbols should be converted to string with ':' prefix
       actual.is_a?(String) && actual == ":#{expected}"
@@ -130,8 +137,20 @@ class CrossLanguageValidator
     when Hash
       return false unless actual.is_a?(Hash) && expected.size == actual.size
       expected.all? do |key, value|
-        actual_key = key.is_a?(Symbol) ? ":#{key}" : key
-        actual.key?(actual_key) && deep_equal?(value, actual[actual_key])
+        # Find the matching key in actual hash
+        matching_key = if key.is_a?(Symbol)
+          # Expected key is symbol, look for symbol key in actual
+          actual.keys.find { |k| k.is_a?(Symbol) && k == key }
+        elsif key.is_a?(String)
+          # Expected key is string, look for string key in actual
+          actual.keys.find { |k| k.is_a?(String) && k == key } ||
+          # Also check if there's a symbol key that matches the string
+          actual.keys.find { |k| k.is_a?(Symbol) && k.to_s == key }
+        else
+          key
+        end
+        
+        matching_key && actual.key?(matching_key) && deep_equal?(value, actual[matching_key])
       end
     else
       expected == actual

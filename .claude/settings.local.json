@@ -18,7 +18,14 @@
       "Bash(grep:*)",
       "Bash(make:*)",
       "Bash(git add:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm test)",
+      "Bash(npm run test:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

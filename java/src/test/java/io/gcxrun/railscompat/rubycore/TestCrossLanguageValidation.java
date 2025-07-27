@@ -4,11 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -20,6 +25,61 @@ import org.junit.jupiter.params.provider.ValueSource;
  * to the Ruby reference implementation, ensuring 100% compatibility.
  */
 public class TestCrossLanguageValidation {
+
+  private static Map<String, TestCase> testCases;
+
+  /**
+   * Test case data structure matching the JSON format from Ruby reference.
+   */
+  public static class TestCase {
+    public String description;
+    public String ruby_literal;
+    public String marshal_base64;
+    public Object expected_result;
+    public int data_size;
+    
+    public TestCase(JSONObject json) throws Exception {
+      this.description = json.optString("description");
+      this.ruby_literal = json.optString("ruby_literal");
+      this.marshal_base64 = json.getString("marshal_base64");
+      this.expected_result = json.get("expected_result");
+      this.data_size = json.optInt("data_size");
+    }
+  }
+
+  /**
+   * Load pre-generated test data from Ruby reference implementation.
+   */
+  @BeforeAll
+  public static void loadTestData() throws Exception {
+    // Path to shared test data relative to project root
+    File testDataFile = new File("../shared/test-data/marshal_test_cases.json");
+    
+    if (!testDataFile.exists()) {
+      // Try alternative path structure
+      testDataFile = new File("../../shared/test-data/marshal_test_cases.json");
+    }
+    
+    if (!testDataFile.exists()) {
+      throw new IOException("Test data file not found. Please run the Ruby test data generator first.");
+    }
+
+    String jsonContent = Files.readString(testDataFile.toPath());
+    JSONObject rootJson = new JSONObject(jsonContent);
+    JSONObject testCasesJson = rootJson.getJSONObject("test_cases");
+    
+    testCases = new HashMap<>();
+    var names = testCasesJson.names();
+    if (names != null) {
+      for (int i = 0; i < names.length(); i++) {
+        String key = names.getString(i);
+        JSONObject testCaseJson = testCasesJson.getJSONObject(key);
+        testCases.put(key, new TestCase(testCaseJson));
+      }
+    }
+
+    System.out.println("Loaded " + testCases.size() + " test cases from Ruby reference data");
+  }
 
   /**
    * Run Ruby cross-language validator script and return parsed JSON result.
@@ -96,12 +156,19 @@ public class TestCrossLanguageValidation {
     
     assertTrue(rubyValidation.getBoolean("matches"), "Ruby validation failed for " + caseName);
     
+    // Get marshal data from test data
+    TestCase testCase = testCases.get(caseName);
+    if (testCase == null) {
+      fail("Test case not found: " + caseName);
+    }
+    
     // Parse with Java implementation
-    String marshalBase64 = rubyValidation.getString("marshal_base64");
-    Object javaResult = Marshal.load(marshalBase64);
+    Object javaResult = Marshal.load(testCase.marshal_base64);
     
     // Basic validation - should not be null and should match expected type
-    assertNotNull(javaResult, "Java result should not be null for " + caseName);
+    if (!caseName.equals("nil_value")) {
+      assertNotNull(javaResult, "Java result should not be null for " + caseName);
+    }
     
     // Type-specific validations
     Object expectedResult = rubyValidation.get("expected");
@@ -143,9 +210,14 @@ public class TestCrossLanguageValidation {
     
     assertTrue(rubyValidation.getBoolean("matches"), "Ruby validation failed for symbol_reuse");
     
+    // Get marshal data from test data
+    TestCase testCase = testCases.get("symbol_reuse");
+    if (testCase == null) {
+      fail("Test case not found: symbol_reuse");
+    }
+    
     // Parse with Java implementation
-    String marshalBase64 = rubyValidation.getString("marshal_base64");
-    Object javaResult = Marshal.load(marshalBase64);
+    Object javaResult = Marshal.load(testCase.marshal_base64);
     
     // Should be a list with 4 elements
     assertTrue(javaResult instanceof List, "symbol_reuse should be List");
